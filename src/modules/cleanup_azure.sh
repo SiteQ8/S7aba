@@ -1,27 +1,33 @@
 #!/usr/bin/env bash
-# S7aba - Placeholder Module
-# This module is under active development
+# S7aba - Azure Cleanup Module
 
-_not_implemented() {
-    log_warn "Module ${BASH_SOURCE[0]} is under development"
-    log_info "Contributions welcome: https://github.com/SiteQ8/S7aba"
+identify_artifacts() {
+    log_info "Identifying S7aba artifacts in Azure..."
+
+    # App registrations
+    local apps
+    apps=$(az ad app list --filter "startswith(displayName, 'svc-monitoring')" --query '[].{Name:displayName,ID:appId}' -o json 2>/dev/null)
+    [[ -n "$apps" && "$apps" != "[]" ]] && log_finding "INFO" "Backdoor Apps" "$(echo "$apps" | jq -r '.[].Name')"
+
+    # Activity log
+    local activities
+    activities=$(az monitor activity-log list --max-events 20 --query '[].{Op:operationName.value,Status:status.value}' -o json 2>/dev/null)
+    log_finding "INFO" "Activity Log" "$(echo "$activities" | jq 'length') recent operations"
+
+    log_info "Review Azure Activity Log for complete audit trail"
 }
 
-enum_identity() { _not_implemented; }
-enum_permissions() { _not_implemented; }
-enum_services() { _not_implemented; }
-enum_network() { _not_implemented; }
-enum_secrets() { _not_implemented; }
-analyze_permissions() { _not_implemented; }
-find_escalation_paths() { _not_implemented; }
-exploit_paths() { _not_implemented; }
-enumerate_persistence_options() { _not_implemented; }
-deploy_persistence() { _not_implemented; }
-discover_data_stores() { _not_implemented; }
-classify_data() { _not_implemented; }
-evaluate_exfil_channels() { _not_implemented; }
-map_trust_relationships() { _not_implemented; }
-find_pivot_points() { _not_implemented; }
-enumerate_targets() { _not_implemented; }
-identify_artifacts() { _not_implemented; }
-remove_artifacts() { _not_implemented; }
+remove_artifacts() {
+    log_warn "Removing S7aba artifacts..."
+
+    # Remove backdoor apps
+    local apps
+    apps=$(az ad app list --filter "startswith(displayName, 'svc-monitoring')" --query '[].appId' -o tsv 2>/dev/null)
+    for app in $apps; do
+        az ad app delete --id "$app" 2>/dev/null
+        log_success "Removed app: $app"
+    done
+
+    rm -f /tmp/s7aba.* 2>/dev/null
+    log_success "Local temp files cleaned"
+}

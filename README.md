@@ -207,18 +207,68 @@ S7aba checks for **14+ known AWS IAM privilege escalation techniques**:
 | 13 | `CreateAccessKey` | MEDIUM | Generate keys for other users |
 | 14 | `PassRole+Glue` | HIGH | Glue dev endpoint with admin role |
 
+### Azure Privilege Escalation Methods
+
+| # | Method | Risk | Description |
+|---|--------|------|-------------|
+| 1 | `UserAccessAdmin→Owner` | CRITICAL | Self-assign Owner role via User Access Admin |
+| 2 | `Contributor→RunCommand` | HIGH | Execute commands on VMs via Run Command |
+| 3 | `Contributor→CustomScript` | HIGH | Deploy Custom Script Extension on VMs |
+| 4 | `Contributor→FunctionApp` | HIGH | Create Function App with managed identity |
+| 5 | `VMRunCommand` | HIGH | Run arbitrary commands on virtual machines |
+| 6 | `AutomationRunbook` | HIGH | Create runbook with RunAs account |
+| 7 | `LogicAppManagedId` | HIGH | Logic App with managed identity for ARM access |
+| 8 | `KeyVaultPolicyMod` | HIGH | Modify Key Vault access policies |
+| 9 | `AppSecretAdd` | HIGH | Add credentials to owned application |
+| 10 | `ManagedIdentityToken` | HIGH | Extract MI token from IMDS |
+| 11 | `TenantConsent` | CRITICAL | Abuse tenant-wide consented permissions |
+
+### GCP Privilege Escalation Methods
+
+| # | Method | Risk | Description |
+|---|--------|------|-------------|
+| 1 | `SetIamPolicy` | CRITICAL | Modify project IAM to grant Owner |
+| 2 | `CreateSAKey` | HIGH | Generate key for privileged SA |
+| 3 | `GetSAToken` | HIGH | Generate access token for SA |
+| 4 | `SignBlobJwt` | HIGH | Sign blobs/JWTs as service account |
+| 5 | `ActAs+Compute` | HIGH | Create VM with privileged SA |
+| 6 | `ActAs+CloudFunction` | HIGH | Deploy Cloud Function with privileged SA |
+| 7 | `ActAs+CloudRun` | HIGH | Deploy Cloud Run with privileged SA |
+| 8 | `SetMetadata` | HIGH | Inject startup script via instance metadata |
+| 9 | `CloudBuild` | HIGH | Submit build using Cloud Build SA |
+| 10 | `UpdateRole` | HIGH | Add permissions to custom role |
+| 11 | `DeploymentManager` | HIGH | Create deployment with DM SA |
+| 12 | `OrgPolicyOverride` | CRITICAL | Override org security policies |
+
+### Kubernetes Privilege Escalation Methods
+
+| # | Method | Risk | Description |
+|---|--------|------|-------------|
+| 1 | `BindClusterAdmin` | CRITICAL | ClusterRoleBinding to cluster-admin |
+| 2 | `EscalateClusterRole` | CRITICAL | Modify ClusterRole with wildcard perms |
+| 3 | `PrivilegedPod` | HIGH | Privileged pod to escape to host |
+| 4 | `HostPathPod` | HIGH | Mount host filesystem into pod |
+| 5 | `HostPIDPod` | HIGH | Pod with hostPID for node process access |
+| 6 | `ReadSecrets` | HIGH | Read SA tokens and secrets |
+| 7 | `Impersonate` | HIGH | Impersonate privileged users/SAs |
+| 8 | `PodExec` | HIGH | Exec into existing privileged pods |
+| 9 | `PatchWorkload` | HIGH | Modify pods/deployments for escalation |
+| 10 | `DaemonSetAllNodes` | HIGH | Deploy DaemonSet on every node |
+| 11 | `MintSAToken` | HIGH | Create tokens for privileged SAs |
+| 12 | `CronJobBackdoor` | MEDIUM | CronJob for persistent execution |
+
 ---
 
 ## ☁️ Supported Providers
 
-| Provider | Status | Recon | Privesc | Lateral | Persist | Exfil |
-|----------|--------|-------|---------|---------|---------|-------|
-| **AWS** | ✅ Ready | ✅ | ✅ | 🔧 | 🔧 | 🔧 |
-| **Azure** | 🟡 Beta | 🔧 | 🔧 | 🔧 | 🔧 | 🔧 |
-| **GCP** | 🟡 Beta | 🔧 | 🔧 | 🔧 | 🔧 | 🔧 |
-| **Kubernetes** | 🔵 Dev | 🔧 | 🔧 | 🔧 | 🔧 | 🔧 |
+| Provider | Status | Recon | Privesc | Lateral | Persist | Exfil | Cleanup |
+|----------|--------|-------|---------|---------|---------|-------|---------|
+| **AWS** | ✅ Ready | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Azure** | ✅ Ready | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **GCP** | ✅ Ready | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Kubernetes** | ✅ Ready | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
-✅ = Complete | 🔧 = In Development | 🔵 = Planned
+All 4 providers fully implemented across all 6 attack phases + reporting.
 
 ---
 

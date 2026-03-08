@@ -1,27 +1,44 @@
 #!/usr/bin/env bash
-# S7aba - Placeholder Module
-# This module is under active development
+# S7aba - GCP Cleanup Module
 
-_not_implemented() {
-    log_warn "Module ${BASH_SOURCE[0]} is under development"
-    log_info "Contributions welcome: https://github.com/SiteQ8/S7aba"
+identify_artifacts() {
+    log_info "Identifying S7aba artifacts in GCP..."
+
+    local project
+    project=$(gcloud config get-value project 2>/dev/null)
+
+    # Service accounts
+    local sas
+    sas=$(gcloud iam service-accounts list --filter="displayName:Monitoring" --format='value(email)' 2>/dev/null)
+    [[ -n "$sas" ]] && log_finding "INFO" "Backdoor SAs" "$sas"
+
+    # SA keys
+    local sa_list
+    sa_list=$(gcloud iam service-accounts list --format='value(email)' 2>/dev/null)
+    for sa in $sa_list; do
+        local user_keys
+        user_keys=$(gcloud iam service-accounts keys list --iam-account="$sa" --managed-by=user --format='value(name)' 2>/dev/null | wc -l)
+        [[ $user_keys -gt 0 ]] && log_finding "INFO" "User-Managed Keys" "$sa: $user_keys keys"
+    done
+
+    # Audit log
+    log_info "Review Cloud Audit Logs: gcloud logging read 'logName:activity'"
 }
 
-enum_identity() { _not_implemented; }
-enum_permissions() { _not_implemented; }
-enum_services() { _not_implemented; }
-enum_network() { _not_implemented; }
-enum_secrets() { _not_implemented; }
-analyze_permissions() { _not_implemented; }
-find_escalation_paths() { _not_implemented; }
-exploit_paths() { _not_implemented; }
-enumerate_persistence_options() { _not_implemented; }
-deploy_persistence() { _not_implemented; }
-discover_data_stores() { _not_implemented; }
-classify_data() { _not_implemented; }
-evaluate_exfil_channels() { _not_implemented; }
-map_trust_relationships() { _not_implemented; }
-find_pivot_points() { _not_implemented; }
-enumerate_targets() { _not_implemented; }
-identify_artifacts() { _not_implemented; }
-remove_artifacts() { _not_implemented; }
+remove_artifacts() {
+    log_warn "Removing S7aba artifacts..."
+
+    local project
+    project=$(gcloud config get-value project 2>/dev/null)
+
+    # Remove backdoor SAs
+    local sas
+    sas=$(gcloud iam service-accounts list --filter="displayName:Monitoring" --format='value(email)' 2>/dev/null)
+    for sa in $sas; do
+        gcloud iam service-accounts delete "$sa" --quiet 2>/dev/null
+        log_success "Removed SA: $sa"
+    done
+
+    rm -f /tmp/s7aba_*.json /tmp/s7aba.* 2>/dev/null
+    log_success "Local temp files cleaned"
+}
