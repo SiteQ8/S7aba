@@ -35,7 +35,7 @@
 
 ## 🔍 What is S7aba?
 
-**S7aba** (سحابة — Arabic for "Cloud") is a pure Bash cloud privilege escalation and post-exploitation framework designed for red teamers, penetration testers, and cloud security professionals.
+**S7aba** (سحابة — Arabic word for "Cloud") is a pure Bash cloud privilege escalation and post-exploitation framework designed for red teamers, penetration testers, and cloud security professionals.
 
 It auto-detects your cloud environment, enumerates permissions and misconfigurations, identifies privilege escalation paths, and provides post-exploitation capabilities — all from a single command-line tool with **zero dependencies** beyond standard cloud CLIs.
 
