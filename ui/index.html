@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S7aba — Cloud Privilege Escalation & Post-Exploitation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Space+Grotesk:wght@300;400;500;600;700&family=Outfit:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #06080c;
+            --bg-secondary: #0c1018;
+            --bg-card: #0f1420;
+            --bg-card-hover: #141c2c;
+            --accent: #00e5a0;
+            --accent-dim: #00e5a020;
+            --accent-mid: #00e5a050;
+            --red: #ff4057;
+            --red-dim: #ff405720;
+            --orange: #ff8c42;
+            --orange-dim: #ff8c4220;
+            --blue: #3b82f6;
+            --blue-dim: #3b82f620;
+            --purple: #a855f7;
+            --purple-dim: #a855f720;
+            --yellow: #fbbf24;
+            --yellow-dim: #fbbf2420;
+            --text-primary: #e8edf5;
+            --text-secondary: #7a8ba8;
+            --text-dim: #3d4f6a;
+            --border: #1a2438;
+            --border-light: #243044;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        html { scroll-behavior: smooth; }
+        
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.7;
+        }
+
+        /* Noise overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* Grid background */
+        .grid-bg {
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(var(--border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 60px 60px;
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        /* Glow orbs */
+        .glow-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.12;
+            pointer-events: none;
+            animation: float 20s infinite ease-in-out;
+        }
+        .glow-orb.green { background: var(--accent); width: 500px; height: 500px; top: -100px; left: -100px; }
+        .glow-orb.red { background: var(--red); width: 400px; height: 400px; bottom: -100px; right: -100px; animation-delay: -7s; }
+        .glow-orb.blue { background: var(--blue); width: 300px; height: 300px; top: 50%; left: 50%; animation-delay: -14s; }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(50px, -30px); }
+            50% { transform: translate(-30px, 50px); }
+            75% { transform: translate(30px, 30px); }
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 1rem 2rem;
+            backdrop-filter: blur(20px);
+            background: #06080c99;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .nav-logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--accent);
+            letter-spacing: 2px;
+            text-decoration: none;
+        }
+        .nav-logo span { color: var(--text-dim); }
+        
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            transition: color 0.3s;
+        }
+        .nav-links a:hover { color: var(--accent); }
+        
+        .nav-github {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        .nav-github:hover { border-color: var(--accent); color: var(--accent); }
+        .nav-github svg { width: 18px; height: 18px; fill: currentColor; }
+
+        /* Hero */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 6rem 2rem 4rem;
+        }
+        
+        .hero-content {
+            text-align: center;
+            max-width: 900px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 1rem;
+            border: 1px solid var(--accent-mid);
+            border-radius: 100px;
+            font-size: 0.78rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent);
+            margin-bottom: 2rem;
+            background: var(--accent-dim);
+            animation: fadeIn 0.8s ease-out;
+        }
+        .hero-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .hero-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 700;
+            letter-spacing: 6px;
+            margin-bottom: 1rem;
+            line-height: 1.1;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+        .hero-title .glow {
+            color: var(--accent);
+            text-shadow: 0 0 40px var(--accent-mid), 0 0 80px var(--accent-dim);
+        }
+        
+        .hero-subtitle {
+            font-size: 1.25rem;
+            font-weight: 300;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            letter-spacing: 2px;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+        
+        .hero-desc {
+            font-size: 0.95rem;
+            color: var(--text-dim);
+            max-width: 600px;
+            margin: 0 auto 2.5rem;
+            line-height: 1.8;
+            animation: fadeInUp 0.8s ease-out 0.5s both;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease-out 0.6s both;
+        }
+        
+        .btn {
+            padding: 0.75rem 2rem;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+        .btn-primary:hover {
+            background: #00ffb3;
+            box-shadow: 0 0 30px var(--accent-mid);
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-light);
+        }
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Terminal Demo */
+        .terminal-section {
+            padding: 4rem 2rem 6rem;
+            position: relative;
+        }
+        
+        .terminal-wrapper {
+            max-width: 850px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .terminal {
+            background: #0a0e16;
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6), 0 0 0 1px var(--border);
+        }
+        
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: #0c1018;
+            border-bottom: 1px solid var(--border);
+        }
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .terminal-dot.red { background: #ff5f57; }
+        .terminal-dot.yellow { background: #ffbd2e; }
+        .terminal-dot.green { background: #28c840; }
+        .terminal-title {
+            flex: 1;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+        
+        .terminal-body {
+            padding: 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            line-height: 1.9;
+            min-height: 380px;
+        }
+        
+        .term-line { opacity: 0; animation: termLine 0.5s ease-out forwards; }
+        .term-line:nth-child(1) { animation-delay: 0.3s; }
+        .term-line:nth-child(2) { animation-delay: 0.6s; }
+        .term-line:nth-child(3) { animation-delay: 0.9s; }
+        .term-line:nth-child(4) { animation-delay: 1.2s; }
+        .term-line:nth-child(5) { animation-delay: 1.5s; }
+        .term-line:nth-child(6) { animation-delay: 1.8s; }
+        .term-line:nth-child(7) { animation-delay: 2.1s; }
+        .term-line:nth-child(8) { animation-delay: 2.4s; }
+        .term-line:nth-child(9) { animation-delay: 2.7s; }
+        .term-line:nth-child(10) { animation-delay: 3.0s; }
+        .term-line:nth-child(11) { animation-delay: 3.3s; }
+        .term-line:nth-child(12) { animation-delay: 3.6s; }
+        .term-line:nth-child(13) { animation-delay: 3.9s; }
+        .term-line:nth-child(14) { animation-delay: 4.2s; }
+
+        @keyframes termLine {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .term-prompt { color: var(--accent); }
+        .term-cmd { color: var(--text-primary); }
+        .term-info { color: var(--blue); }
+        .term-success { color: var(--accent); }
+        .term-warn { color: var(--yellow); }
+        .term-danger { color: var(--red); }
+        .term-dim { color: var(--text-dim); }
+        .term-section { color: #00e5a0; font-weight: 700; }
+
+        /* Section headers */
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+        .section-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--accent);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+        }
+        .section-title {
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        /* Features */
+        .features {
+            padding: 6rem 2rem;
+            position: relative;
+        }
+        
+        .features-grid {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+        .feature-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-light);
+            transform: translateY(-4px);
+        }
+        .feature-card:hover::before { opacity: 1; }
+        
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            margin-bottom: 1.2rem;
+        }
+        .feature-icon.green { background: var(--accent-dim); color: var(--accent); }
+        .feature-icon.red { background: var(--red-dim); color: var(--red); }
+        .feature-icon.blue { background: var(--blue-dim); color: var(--blue); }
+        .feature-icon.purple { background: var(--purple-dim); color: var(--purple); }
+        .feature-icon.orange { background: var(--orange-dim); color: var(--orange); }
+        .feature-icon.yellow { background: var(--yellow-dim); color: var(--yellow); }
+        
+        .feature-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+        .feature-desc {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        /* Architecture */
+        .architecture {
+            padding: 6rem 2rem;
+        }
+        
+        .arch-grid {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        
+        .arch-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+        }
+        
+        .arch-card h3 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+            color: var(--accent);
+        }
+        
+        .arch-tree {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+        .arch-tree .dir { color: var(--blue); }
+        .arch-tree .file { color: var(--text-dim); }
+        .arch-tree .important { color: var(--accent); }
+
+        /* Cloud Providers */
+        .providers {
+            padding: 6rem 2rem;
+        }
+        
+        .provider-grid {
+            max-width: 900px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+        
+        .provider-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .provider-card:hover {
+            border-color: var(--border-light);
+            transform: translateY(-4px);
+        }
+        
+        .provider-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        .provider-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 0.3rem;
+        }
+        .provider-status {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 100px;
+            display: inline-block;
+        }
+        .provider-status.ready { background: var(--accent-dim); color: var(--accent); }
+        .provider-status.beta { background: var(--yellow-dim); color: var(--yellow); }
+        .provider-status.dev { background: var(--blue-dim); color: var(--blue); }
+
+        /* Attack flow */
+        .attack-flow {
+            padding: 6rem 2rem;
+        }
+        
+        .flow-container {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .flow-line {
+            position: absolute;
+            left: 28px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--accent), var(--red));
+            opacity: 0.3;
+        }
+        
+        .flow-step {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        
+        .flow-dot {
+            width: 58px;
+            min-width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 0.85rem;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .flow-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.5rem;
+            flex: 1;
+        }
+        .flow-content h3 {
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+        }
+        .flow-content p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+        .flow-content code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            background: #0a0e16;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            color: var(--accent);
+        }
+
+        /* Install */
+        .install {
+            padding: 6rem 2rem;
+        }
+        
+        .install-box {
+            max-width: 700px;
+            margin: 0 auto;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .install-header {
+            padding: 1rem 1.5rem;
+            background: #0c1018;
+            border-bottom: 1px solid var(--border);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+        
+        .install-body {
+            padding: 1.5rem;
+        }
+        
+        .install-line {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 2.2;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .install-line .comment { color: var(--text-dim); }
+        .install-line .cmd { color: var(--text-primary); }
+        .install-line .accent { color: var(--accent); }
+
+        /* Footer */
+        footer {
+            padding: 4rem 2rem 2rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+        
+        .footer-logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 4px;
+            margin-bottom: 1rem;
+        }
+        .footer-text {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-bottom: 1rem;
+        }
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            list-style: none;
+        }
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.82rem;
+            transition: color 0.3s;
+        }
+        .footer-links a:hover { color: var(--accent); }
+
+        /* Disclaimer */
+        .disclaimer {
+            max-width: 700px;
+            margin: 3rem auto 0;
+            padding: 1.5rem;
+            border: 1px solid var(--red-dim);
+            border-radius: 10px;
+            background: #ff405708;
+        }
+        .disclaimer h4 {
+            color: var(--red);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            margin-bottom: 0.5rem;
+        }
+        .disclaimer p {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .arch-grid { grid-template-columns: 1fr; }
+            .provider-grid { grid-template-columns: repeat(2, 1fr); }
+            .hero-title { letter-spacing: 2px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+    <div class="glow-orb green"></div>
+    <div class="glow-orb red"></div>
+    <div class="glow-orb blue"></div>
+
+    <!-- Nav -->
+    <nav>
+        <a href="#" class="nav-logo">S7ABA<span>.sh</span></a>
+        <ul class="nav-links">
+            <li><a href="#features">Features</a></li>
+            <li><a href="#attack-flow">Attack Flow</a></li>
+            <li><a href="#providers">Providers</a></li>
+            <li><a href="#install">Install</a></li>
+        </ul>
+        <a href="https://github.com/SiteQ8/S7aba" class="nav-github" target="_blank">
+            <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            Star on GitHub
+        </a>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">v1.0.0 — Now Available</div>
+            <h1 class="hero-title"><span class="glow">S7ABA</span></h1>
+            <p class="hero-subtitle">Cloud Privilege Escalation & Post-Exploitation</p>
+            <p class="hero-desc">
+                A pure Bash framework for cloud security assessments. Auto-detect cloud providers,
+                enumerate permissions, discover escalation paths, and generate detailed reports.
+                Built for red teamers and cloud security professionals.
+            </p>
+            <div class="hero-actions">
+                <a href="#install" class="btn btn-primary">⚡ Quick Start</a>
+                <a href="https://github.com/SiteQ8/S7aba" class="btn btn-secondary" target="_blank">View Source →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Terminal Demo -->
+    <section class="terminal-section">
+        <div class="terminal-wrapper">
+            <div class="terminal">
+                <div class="terminal-header">
+                    <div class="terminal-dot red"></div>
+                    <div class="terminal-dot yellow"></div>
+                    <div class="terminal-dot green"></div>
+                    <div class="terminal-title">s7aba — bash — 92x24</div>
+                </div>
+                <div class="terminal-body">
+                    <div class="term-line"><span class="term-prompt">┌──(s7aba)─[aws]</span></div>
+                    <div class="term-line"><span class="term-prompt">└─$ </span><span class="term-cmd">./s7aba.sh -p aws recon</span></div>
+                    <div class="term-line">&nbsp;</div>
+                    <div class="term-line"><span class="term-section">═══════════════════════════════════════</span></div>
+                    <div class="term-line"><span class="term-section">  RECONNAISSANCE</span></div>
+                    <div class="term-line"><span class="term-section">═══════════════════════════════════════</span></div>
+                    <div class="term-line">&nbsp;</div>
+                    <div class="term-line"><span class="term-info">[*]</span> Querying AWS STS...</div>
+                    <div class="term-line"><span class="term-success">[+]</span> Account: 1234***890 | ARN: arn:aws:iam::user/pentest</div>
+                    <div class="term-line"><span class="term-info">[*]</span> Enumerating IAM permissions...</div>
+                    <div class="term-line"><span class="term-danger">● [HIGH]</span> <strong>Overprivileged Policy</strong></div>
+                    <div class="term-line"><span class="term-dim">         AmazonS3FullAccess grants broad access</span></div>
+                    <div class="term-line"><span class="term-danger">● [HIGH]</span> <strong>IMDSv1 Enabled</strong></div>
+                    <div class="term-line"><span class="term-dim">         Metadata accessible without token (SSRF risk)</span></div>
+                    <div class="term-line"><span class="term-success">[+]</span> Recon complete. 14 findings saved.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features" id="features">
+        <div class="section-header">
+            <div class="section-label">Capabilities</div>
+            <h2 class="section-title">Everything You Need for Cloud Assessments</h2>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon green">🔍</div>
+                <h3 class="feature-title">Cloud Reconnaissance</h3>
+                <p class="feature-desc">Enumerate identities, permissions, services, network configs, and secrets across cloud environments automatically.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon red">⚡</div>
+                <h3 class="feature-title">Privilege Escalation</h3>
+                <p class="feature-desc">Identify 14+ AWS IAM escalation paths including CreatePolicyVersion, PassRole+Lambda, AttachUserPolicy, and more.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon blue">🔗</div>
+                <h3 class="feature-title">Lateral Movement</h3>
+                <p class="feature-desc">Map trust relationships, cross-service pivots, and reachable targets. Move between accounts and services.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon purple">🛡️</div>
+                <h3 class="feature-title">Persistence</h3>
+                <p class="feature-desc">Evaluate and deploy persistence mechanisms. Backdoor IAM roles, Lambda triggers, and scheduled tasks.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon orange">📤</div>
+                <h3 class="feature-title">Data Exfiltration</h3>
+                <p class="feature-desc">Discover sensitive data stores, classify data, and evaluate exfiltration channels across S3, RDS, and more.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon yellow">📊</div>
+                <h3 class="feature-title">Reporting</h3>
+                <p class="feature-desc">Generate assessment reports in text, JSON, or HTML format. Structured findings with severity ratings and evidence.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Attack Flow -->
+    <section class="attack-flow" id="attack-flow">
+        <div class="section-header">
+            <div class="section-label">Methodology</div>
+            <h2 class="section-title">Attack Flow</h2>
+        </div>
+        <div class="flow-container">
+            <div class="flow-line"></div>
+            
+            <div class="flow-step">
+                <div class="flow-dot" style="background:var(--accent-dim);color:var(--accent);">01</div>
+                <div class="flow-content">
+                    <h3>Reconnaissance</h3>
+                    <p>Auto-detect cloud provider via metadata endpoints and CLI tools. Enumerate identity, permissions, services, and network topology. <code>./s7aba.sh recon</code></p>
+                </div>
+            </div>
+            
+            <div class="flow-step">
+                <div class="flow-dot" style="background:var(--yellow-dim);color:var(--yellow);">02</div>
+                <div class="flow-content">
+                    <h3>Privilege Escalation</h3>
+                    <p>Simulate IAM actions to discover dangerous permissions. Map escalation paths ranked by severity. Optionally exploit with confirmation. <code>./s7aba.sh privesc</code></p>
+                </div>
+            </div>
+            
+            <div class="flow-step">
+                <div class="flow-dot" style="background:var(--orange-dim);color:var(--orange);">03</div>
+                <div class="flow-content">
+                    <h3>Lateral Movement</h3>
+                    <p>Discover cross-account trust relationships, service-linked roles, and pivot points to expand access across the environment. <code>./s7aba.sh lateral</code></p>
+                </div>
+            </div>
+            
+            <div class="flow-step">
+                <div class="flow-dot" style="background:var(--red-dim);color:var(--red);">04</div>
+                <div class="flow-content">
+                    <h3>Persistence & Exfiltration</h3>
+                    <p>Establish persistence through IAM backdoors and triggers. Discover and classify sensitive data for controlled exfiltration testing. <code>./s7aba.sh persist</code></p>
+                </div>
+            </div>
+            
+            <div class="flow-step">
+                <div class="flow-dot" style="background:var(--purple-dim);color:var(--purple);">05</div>
+                <div class="flow-content">
+                    <h3>Cleanup & Report</h3>
+                    <p>Remove all artifacts and traces. Generate comprehensive assessment reports with findings, severity ratings, and remediation guidance. <code>./s7aba.sh cleanup && ./s7aba.sh report</code></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Cloud Providers -->
+    <section class="providers" id="providers">
+        <div class="section-header">
+            <div class="section-label">Multi-Cloud</div>
+            <h2 class="section-title">Supported Providers</h2>
+        </div>
+        <div class="provider-grid">
+            <div class="provider-card">
+                <div class="provider-icon">☁️</div>
+                <div class="provider-name">AWS</div>
+                <span class="provider-status ready">● Ready</span>
+            </div>
+            <div class="provider-card">
+                <div class="provider-icon">🔷</div>
+                <div class="provider-name">Azure</div>
+                <span class="provider-status beta">◐ Beta</span>
+            </div>
+            <div class="provider-card">
+                <div class="provider-icon">🌐</div>
+                <div class="provider-name">GCP</div>
+                <span class="provider-status beta">◐ Beta</span>
+            </div>
+            <div class="provider-card">
+                <div class="provider-icon">⎈</div>
+                <div class="provider-name">Kubernetes</div>
+                <span class="provider-status dev">○ Dev</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Architecture -->
+    <section class="architecture" id="architecture">
+        <div class="section-header">
+            <div class="section-label">Structure</div>
+            <h2 class="section-title">Project Architecture</h2>
+        </div>
+        <div class="arch-grid">
+            <div class="arch-card">
+                <h3>📁 Directory Layout</h3>
+                <div class="arch-tree">
+                    <span class="important">s7aba.sh</span> ← Entry point<br>
+                    <span class="dir">src/</span><br>
+                    &nbsp;&nbsp;<span class="dir">├── lib/</span><br>
+                    &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;<span class="file">├── utils.sh</span><br>
+                    &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;<span class="file">├── logger.sh</span><br>
+                    &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;<span class="file">└── cloud_detect.sh</span><br>
+                    &nbsp;&nbsp;<span class="dir">└── modules/</span><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">├── recon_aws.sh</span><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">├── privesc_aws.sh</span><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">├── lateral_*.sh</span><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">├── persist_*.sh</span><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">├── exfil_*.sh</span><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">├── cleanup_*.sh</span><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">└── report.sh</span><br>
+                    <span class="dir">ui/</span> ← This landing page<br>
+                    <span class="dir">docs/</span> ← Documentation<br>
+                </div>
+            </div>
+            <div class="arch-card">
+                <h3>⚙️ Design Principles</h3>
+                <div class="arch-tree" style="color: var(--text-secondary);">
+                    <span class="important">Pure Bash</span> — No Python/Go deps<br><br>
+                    <span class="important">Modular</span> — Each provider & command<br>
+                    is a standalone module<br><br>
+                    <span class="important">Safe by Default</span> — Dry-run mode,<br>
+                    confirmation prompts, full logging<br><br>
+                    <span class="important">Auto-Detection</span> — Identifies cloud<br>
+                    provider via metadata & CLI tools<br><br>
+                    <span class="important">Extensible</span> — Add new providers<br>
+                    by creating module files
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Install -->
+    <section class="install" id="install">
+        <div class="section-header">
+            <div class="section-label">Get Started</div>
+            <h2 class="section-title">Installation</h2>
+        </div>
+        <div class="install-box">
+            <div class="install-header">Terminal</div>
+            <div class="install-body">
+                <div class="install-line"><span class="comment"># Clone the repository</span></div>
+                <div class="install-line"><span class="accent">$</span> <span class="cmd">git clone https://github.com/SiteQ8/S7aba.git</span></div>
+                <div class="install-line"><span class="accent">$</span> <span class="cmd">cd S7aba</span></div>
+                <div class="install-line">&nbsp;</div>
+                <div class="install-line"><span class="comment"># Make executable</span></div>
+                <div class="install-line"><span class="accent">$</span> <span class="cmd">chmod +x s7aba.sh</span></div>
+                <div class="install-line">&nbsp;</div>
+                <div class="install-line"><span class="comment"># Run recon (auto-detects cloud)</span></div>
+                <div class="install-line"><span class="accent">$</span> <span class="cmd">./s7aba.sh recon</span></div>
+                <div class="install-line">&nbsp;</div>
+                <div class="install-line"><span class="comment"># Or specify provider</span></div>
+                <div class="install-line"><span class="accent">$</span> <span class="cmd">./s7aba.sh -p aws privesc</span></div>
+                <div class="install-line">&nbsp;</div>
+                <div class="install-line"><span class="comment"># Interactive mode</span></div>
+                <div class="install-line"><span class="accent">$</span> <span class="cmd">./s7aba.sh interactive</span></div>
+            </div>
+        </div>
+
+        <div class="disclaimer">
+            <h4>⚠ LEGAL DISCLAIMER</h4>
+            <p>S7aba is designed for <strong>authorized security testing only</strong>. Usage of this tool for attacking targets without prior mutual consent is illegal. It is the end user's responsibility to obey all applicable local, state, and federal laws. The author assumes no liability and is not responsible for any misuse or damage.</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-logo">S7ABA</div>
+        <p class="footer-text">Built by <a href="https://github.com/SiteQ8" style="color:var(--accent);text-decoration:none;">@SiteQ8</a> — Ali AlEnezi</p>
+        <ul class="footer-links">
+            <li><a href="https://github.com/SiteQ8/S7aba">GitHub</a></li>
+            <li><a href="https://github.com/SiteQ8/S7aba/issues">Issues</a></li>
+            <li><a href="https://github.com/SiteQ8/S7aba/blob/main/SECURITY.md">Security</a></li>
+            <li><a href="https://github.com/SiteQ8/S7aba/blob/main/LICENSE">MIT License</a></li>
+        </ul>
+    </footer>
+</body>
+</html>

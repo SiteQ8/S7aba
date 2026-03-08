@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+  <rect width="800" height="500" rx="10" fill="#0a0e16"/>
+  <rect x="0" y="0" width="800" height="40" rx="10" fill="#0c1018"/>
+  <rect x="0" y="30" width="800" height="10" fill="#0c1018"/>
+  <line x1="0" y1="40" x2="800" y2="40" stroke="#1a2438" stroke-width="1"/>
+  
+  <circle cx="20" cy="20" r="6" fill="#ff5f57"/>
+  <circle cx="40" cy="20" r="6" fill="#ffbd2e"/>
+  <circle cx="60" cy="20" r="6" fill="#28c840"/>
+  <text x="400" y="24" fill="#3d4f6a" font-family="JetBrains Mono,monospace" font-size="11" text-anchor="middle">s7aba — help</text>
+
+  <g font-family="JetBrains Mono,monospace" font-size="12">
+    <text x="20" y="70" fill="#00e5a0">    ██████╗ ██████╗  █████╗ ██████╗  █████╗</text>
+    <text x="20" y="86" fill="#00e5a0">    ██╔════╝╚════██╗██╔══██╗██╔══██╗██╔══██╗</text>
+    <text x="20" y="102" fill="#00e5a0">    ███████╗    ██╔╝███████║██████╔╝███████║</text>
+    <text x="20" y="118" fill="#00e5a0">    ╚════██║   ██╔╝ ╚════██║██╔══██╗██╔══██║</text>
+    <text x="20" y="134" fill="#00e5a0">    ███████║   ██║       ██║██████╔╝██║  ██║</text>
+    <text x="20" y="150" fill="#00e5a0">    ╚══════╝   ╚═╝       ╚═╝╚═════╝ ╚═╝  ╚═╝</text>
+    
+    <text x="20" y="175" fill="#e8edf5" font-weight="700">    Cloud Privilege Escalation &amp; Post-Exploitation</text>
+    <text x="20" y="193" fill="#3d4f6a">    v1.0.0 | @SiteQ8 | For authorized testing only</text>
+    
+    <text x="20" y="223" fill="#e8edf5" font-weight="700">USAGE</text>
+    <text x="20" y="241" fill="#7a8ba8">  ./s7aba.sh [OPTIONS] &lt;COMMAND&gt; [ARGS]</text>
+    
+    <text x="20" y="268" fill="#e8edf5" font-weight="700">COMMANDS</text>
+    <text x="20" y="288" fill="#00e5a0">  recon       <tspan fill="#7a8ba8">Enumerate cloud environment &amp; permissions</tspan></text>
+    <text x="20" y="306" fill="#00e5a0">  privesc     <tspan fill="#7a8ba8">Identify &amp; exploit privilege escalation paths</tspan></text>
+    <text x="20" y="324" fill="#00e5a0">  persist     <tspan fill="#7a8ba8">Establish persistence mechanisms</tspan></text>
+    <text x="20" y="342" fill="#00e5a0">  exfil       <tspan fill="#7a8ba8">Data discovery &amp; exfiltration techniques</tspan></text>
+    <text x="20" y="360" fill="#00e5a0">  lateral     <tspan fill="#7a8ba8">Lateral movement across cloud services</tspan></text>
+    <text x="20" y="378" fill="#00e5a0">  cleanup     <tspan fill="#7a8ba8">Remove artifacts &amp; cover tracks</tspan></text>
+    <text x="20" y="396" fill="#00e5a0">  report      <tspan fill="#7a8ba8">Generate assessment report</tspan></text>
+    <text x="20" y="414" fill="#00e5a0">  interactive <tspan fill="#7a8ba8">Launch interactive TUI mode</tspan></text>
+    
+    <text x="20" y="441" fill="#e8edf5" font-weight="700">OPTIONS</text>
+    <text x="20" y="461" fill="#fbbf24">  -p, --provider   <tspan fill="#7a8ba8">Target cloud (aws|azure|gcp|k8s|multi)</tspan></text>
+    <text x="20" y="479" fill="#fbbf24">  -v, --verbose    <tspan fill="#7a8ba8">Verbose output</tspan></text>
+    <text x="20" y="497" fill="#fbbf24">  -d, --dry-run    <tspan fill="#7a8ba8">Simulate without executing</tspan></text>
+  </g>
+</svg>

@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ShellCheck
+        run: sudo apt-get install -y shellcheck
+
+      - name: Run ShellCheck on main script
+        run: shellcheck -x s7aba.sh
+
+      - name: Run ShellCheck on libraries
+        run: |
+          for f in src/lib/*.sh; do
+            echo "Checking $f..."
+            shellcheck -x "$f" || true
+          done
+
+      - name: Run ShellCheck on modules
+        run: |
+          for f in src/modules/*.sh; do
+            echo "Checking $f..."
+            shellcheck -x "$f" || true
+          done
+
+  syntax-check:
+    name: Bash Syntax Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check bash syntax
+        run: |
+          find . -name "*.sh" -exec bash -n {} \;
+
+  version-check:
+    name: Version Consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify version string
+        run: |
+          VERSION=$(grep 'readonly VERSION=' s7aba.sh | cut -d'"' -f2)
+          echo "Version: $VERSION"
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1

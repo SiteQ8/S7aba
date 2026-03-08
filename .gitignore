@@ -1,0 +1,36 @@
+# Logs
+logs/
+*.log
+
+# Reports
+reports/
+
+# Temp files
+/tmp/
+*.tmp
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+
+# Credentials (NEVER commit these)
+*.pem
+*.key
+*.env
+.env
+credentials
+.aws/
+.azure/
+.gcloud/
+
+# Node (if UI development)
+node_modules/
+package-lock.json

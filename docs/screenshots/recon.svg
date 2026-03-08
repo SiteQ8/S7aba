@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="520" viewBox="0 0 800 520">
+  <rect width="800" height="520" rx="10" fill="#0a0e16"/>
+  <rect x="0" y="0" width="800" height="40" rx="10" fill="#0c1018"/>
+  <rect x="0" y="30" width="800" height="10" fill="#0c1018"/>
+  <line x1="0" y1="40" x2="800" y2="40" stroke="#1a2438" stroke-width="1"/>
+  
+  <!-- Window buttons -->
+  <circle cx="20" cy="20" r="6" fill="#ff5f57"/>
+  <circle cx="40" cy="20" r="6" fill="#ffbd2e"/>
+  <circle cx="60" cy="20" r="6" fill="#28c840"/>
+  <text x="400" y="24" fill="#3d4f6a" font-family="JetBrains Mono,monospace" font-size="11" text-anchor="middle">s7aba — recon</text>
+
+  <!-- Terminal content -->
+  <g font-family="JetBrains Mono,monospace" font-size="12.5">
+    <text x="20" y="70" fill="#00e5a0">┌──(s7aba)─[aws]</text>
+    <text x="20" y="90" fill="#00e5a0">└─$ <tspan fill="#e8edf5">./s7aba.sh -p aws recon</tspan></text>
+    
+    <text x="20" y="125" fill="#00e5a0" font-weight="700">═══════════════════════════════════════════════</text>
+    <text x="20" y="145" fill="#ffffff" font-weight="700">  RECONNAISSANCE</text>
+    <text x="20" y="165" fill="#00e5a0" font-weight="700">═══════════════════════════════════════════════</text>
+    
+    <text x="20" y="195" fill="#a855f7">  ▸ <tspan fill="#e8edf5">Enumerating identity &amp; credentials</tspan></text>
+    <text x="20" y="215" fill="#3b82f6">[*] <tspan fill="#7a8ba8">Querying AWS STS...</tspan></text>
+    <text x="20" y="235" fill="#00e5a0">[+] <tspan fill="#7a8ba8">Account: 1234***890 | ARN: arn:aws:iam::user/pentest</tspan></text>
+    <text x="20" y="255" fill="#ff4057">● [HIGH] <tspan fill="#e8edf5" font-weight="600">IMDSv1 Enabled</tspan></text>
+    <text x="20" y="273" fill="#3d4f6a">         Instance metadata accessible without token (SSRF risk)</text>
+    
+    <text x="20" y="300" fill="#a855f7">  ▸ <tspan fill="#e8edf5">Mapping IAM permissions</tspan></text>
+    <text x="20" y="320" fill="#ff4057">● [HIGH] <tspan fill="#e8edf5" font-weight="600">Overprivileged Policy</tspan></text>
+    <text x="20" y="338" fill="#3d4f6a">         AmazonS3FullAccess grants broad access</text>
+    <text x="20" y="358" fill="#fbbf24">● [MEDIUM] <tspan fill="#e8edf5" font-weight="600">Inline Policy</tspan></text>
+    <text x="20" y="376" fill="#3d4f6a">         custom-deploy-policy (inline policies bypass governance)</text>
+    
+    <text x="20" y="403" fill="#a855f7">  ▸ <tspan fill="#e8edf5">Discovering services &amp; resources</tspan></text>
+    <text x="20" y="423" fill="#3b82f6">[*] <tspan fill="#7a8ba8">S3 Buckets: 7 | EC2 Instances: 12 | Lambda: 23</tspan></text>
+    <text x="20" y="443" fill="#ff4057">● [HIGH] <tspan fill="#e8edf5" font-weight="600">S3 Public Access</tspan></text>
+    <text x="20" y="461" fill="#3d4f6a">         Bucket 'prod-logs' may lack public access block</text>
+    
+    <text x="20" y="495" fill="#00e5a0">[+] <tspan fill="#e8edf5">Recon complete. Results saved to logs/</tspan></text>
+  </g>
+</svg>
